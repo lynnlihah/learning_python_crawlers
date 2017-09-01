@@ -61,6 +61,7 @@ class BeautifulPicture():
             # print('截取后的图片的url是：', img_url_final)
 
             # 截取url中参数前面、网址后面的字符串为图片名
+            
             name_start_pos = img_url.index('.com/') + 5  # 通过找.com/的位置，来确定它之后的字符位置
             print(name_start_pos)
             name_end_pos = img_url.index('?') # Some pictures: ValueError: substring not found
