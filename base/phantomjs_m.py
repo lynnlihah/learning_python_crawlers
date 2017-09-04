@@ -34,9 +34,9 @@ class BeautifulPicture():
         driver.get(self.web_url)
         self.scroll_down(driver=driver, times=3) # 执行网页下拉到底部操作，执行3次
         print('开始获取所有a标签')
-        print(driver.page_source)
+        #print(driver.page_source)
         all_a = BeautifulSoup(driver.page_source, 'lxml').find_all('img', class_='cV68d')  # 获取网页中的class为cV68d的所有a标签
-        print("all a", all_a)
+        #print("all a", all_a)
         print('开始创建文件夹')
         is_new_folder = self.mkdir(self.folder_path) # 创建文件夹，并判断是否是新创建
         print('开始切换文件夹')
@@ -45,41 +45,42 @@ class BeautifulPicture():
         print("a标签的数量是：", len(all_a)) # 这里添加一个查询图片标签的数量，来检查我们下拉操作是否有误
         file_names = self.get_files(self.folder_path) # 获取文件夹中的所有文件名，类型是list
         for a in all_a: # 循环每个标签，获取标签中图片的url并且进行网络请求，最后保存图片
-            img_str = a['style']  # a标签中完整的style字符串
-            print('a标签的style内容是：', img_str)
-            first_pos = img_str.index('(') + 1
-            second_pos = img_str.index(')')
-            img_url = img_str[first_pos:second_pos] # 使用Python的切片功能截取双引号之间的内容
+            try:
+                img_str = a['style']  # a标签中完整的style字符串
+                print('a标签的style内容是：', img_str)
+                first_pos = img_str.index('(') + 1
+                second_pos = img_str.index(')')
+                img_url = img_str[first_pos:second_pos] # 使用Python的切片功能截取双引号之间的内容
 
-            # 注：为了尽快看到下拉加载的效果，截取高度和宽度部分暂时注释掉，因为图片较大，请求时间较长。
-            # 获取高度和宽度的字符在字符串中的位置
-            # width_pos = img_url.index('&w=')
-            # height_pos = img_url.index('&q=')
-            # width_height_str = img_url[width_pos : height_pos] #使用切片功能截取高度和宽度参数，后面用来将该参数替换掉
-            # print('高度和宽度数据字符串是：', width_height_str)
-            # img_url_final = img_url.replace(width_height_str, '')  #把高度和宽度的字符串替换成空字符
-            # print('截取后的图片的url是：', img_url_final)
+                # 注：为了尽快看到下拉加载的效果，截取高度和宽度部分暂时注释掉，因为图片较大，请求时间较长。
+                # 获取高度和宽度的字符在字符串中的位置
+                # width_pos = img_url.index('&w=')
+                # height_pos = img_url.index('&q=')
+                # width_height_str = img_url[width_pos : height_pos] #使用切片功能截取高度和宽度参数，后面用来将该参数替换掉
+                # print('高度和宽度数据字符串是：', width_height_str)
+                # img_url_final = img_url.replace(width_height_str, '')  #把高度和宽度的字符串替换成空字符
+                # print('截取后的图片的url是：', img_url_final)
 
-            # 截取url中参数前面、网址后面的字符串为图片名
-            
-            name_start_pos = img_url.index('.com/') + 5  # 通过找.com/的位置，来确定它之后的字符位置
-            print(name_start_pos)
-            name_end_pos = img_url.index('?') # Some pictures: ValueError: substring not found
-            print(name_end_pos)
-            img_name = img_url[name_start_pos: name_end_pos] + '.jpg'
-            print(img_name)
-            img_name = img_name.replace('/','')   # 把图片名字中的斜杠都去掉
+                # 截取url中参数前面、网址后面的字符串为图片名
 
-            if is_new_folder:
-                self.save_img(img_url, img_name)  # 调用save_img方法来保存图片
-            else:
-                if img_name not in file_names:
-                    self.save_img(img_url, img_name) # 调用 save_img方法来保存图片
+                name_start_pos = img_url.index('.com/') + 5  # 通过找.com/的位置，来确定它之后的字符位置
+                name_end_pos = img_url.index('?') # Some pictures: ValueError: substring not found
+                img_name = img_url[name_start_pos: name_end_pos] + '.jpg'
+                img_name = img_name.replace('/','')   # 把图片名字中的斜杠都去掉
+                print(img_name)
+                if is_new_folder:
+                    self.save_img(img_url, img_name)  # 调用save_img方法来保存图片
                 else:
-                    print('该图片已经存在：', img_name, "，不再重新下载。")
+                    if img_name not in file_names:
+                        self.save_img(img_url, img_name) # 调用 save_img方法来保存图片
+                    else:
+                        print('该图片已经存在：', img_name, "，不再重新下载。")
+            except Exception as e:
+                print(e)
 
     def save_img(self, url, file_name): # 保存图片
-        print('开始请求图片地址，过程会有点长……（我也想……)')
+        print('开始请求图片地址')
+        print(url)
         img = self.request(url)
         print('开始保存图片')
         f = open(file_name, 'ab')
