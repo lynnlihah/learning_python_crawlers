@@ -64,5 +64,50 @@ class PixivSpider:
 
     class MyThread(threading.Thread):
         def __init__(self, filename, referer, src, opener, q, idx, total):
+            threading.Thread.__init__(self)
+            self.filename = filename
+            self.referer = referer
+            self.src = src
+            self.opener = opener
+            self.q = q
+            self.total = total
+            self.idx = idx
+
+        def run(self):
+            header = {
+                "Accept-Language": "zh-CN,zh;q=0.8",
+                "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
+            }
+            header['referer'] = self.referer
+            request = urllib.request.Request(self.src, headers=header)
+            data = self.opener.open(request).read()
+            file = open(self.filename, "wb")
+            file.write(data)
+            file.close()
+            self.q.put(self.idx)
+            print("Finished:", self.idx, "/", self.total)
+
+        def GetImage(self):
+            self.CreateDir()
+            for i in range(1, 7, 1):
+                self.__GetJsonData(self.__MakeJsonUrl(i))
+            self.__loginRequest()
+            total = len(self.imgs)
+            t1 = datetime.now()
+            print(t1)
+            count = 1
+            for img in self.imgs:
+                id = img["id"]
+                referer = self.__originalLink + str(id)
+                data = self.__opener.open(referer).read()
+                soup = BeautifulSoup(data, "lxml")
+                tags = soup.find_all("img", attrs={"class": "original-image"})
+                if len(tags) > 0:
+                    src = tags[0].attrs['data-src']
+                    # print "#" + str(img["rank"]), src
+                    # file = open(self.__fatherPath + "#" + str(img["rank"]).zfill(3) + src[-4 : len(src)], 'wb')
+                    # file.write(self.__DownloadRequest(referer, src))
+                    # file.close()
+                    mt = self.MyThread("img/" + "#" + str(img["rank"])).zfill(3) + src[-4 : len]
 
 
