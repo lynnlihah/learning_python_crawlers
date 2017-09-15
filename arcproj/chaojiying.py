@@ -1,6 +1,7 @@
 import requests
 from hashlib import md5
 
+
 class Chaojiying_Client(object):
 
     def __init__(self, username, password, soft_id):

@@ -1,56 +1,60 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-import urllib,math,random,time,os,re,json,threading
-import http.cookiejar
-# import urllib.request
+import urllib.request
 import requests
-from pytesseract import *
-from PIL import Image
-from PIL import ImageEnhance
-from io import BytesIO
 from bs4 import BeautifulSoup
-from queue import Queue
 
-class LoginModule:
-    def __init__(self):
-        self.web_url = 'http://hhb.cbi360.net/Login'  # 要访问的网页地址
-        self.folder_path = 'D:\Output'  # 设置图片要存放的文件目录
-        self.headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-            "Accept-Encoding": "gzip, deflate",
-            "Accept-Language": "zh-CN,zh;q=0.8",
-            "Connection": "keep-alive",
-            "Host": "user.cbi360.net"
-        }
-        #self.chaojiying = Chaojiying_Client()
-        self.UserAccount = ""
-        self.UserPwd = ""
+def get_result(company_name):
+    search_prefix = "http://hhb.cbi360.net/"
+    search_body = "SearchCompanyList.aspx?key=" + urllib.parse.quote(company_name)
+    search_page_url = search_prefix + search_body
+    print(search_page_url)
+    search_page = requests.get(search_page_url)
+    search_out_sp = BeautifulSoup(search_page.text, 'lxml')
+    # print(search_out_sp)
+    cid_url = ""
+    cid_href = ""
+    for url in search_out_sp.find_all("a",{"class":"soso_blue"}):
+        if url['title'] == company_name:
+            #print(url['href'])
+            cid_url = url['href']
+    if cid_url:
+        company_page = requests.get(cid_url)
+        company_out_sp = BeautifulSoup(company_page.text, 'lxml')
+        # print(company_out_sp)
+        for li in company_out_sp.find_all("li", {"class":"company_nav_nomal"}):
+            if li.a['title'] == "经营信息":
+                # print(li.a['href'])
+                cid_href = li.a['href']
 
-    def login(self):
-        print('开始网页get请求')
-        r = self.request(self.web_url)
-        print(r)
-        print('开始创建文件夹')
-        self.mkdir(self.folder_path)
-        #print('开始切换文件夹')
-        #os.chdir(self.folder_path)  # 切换路径至上面创建的文件夹
+    cid = cid_href.split('=')[1]
+    print(cid)
+    return cid
 
-    def mkdir(self, path):
-        path = path.strip()
-        isExists = os.path.exists(path)
-        if not isExists:
-            print('创建名字叫做', path, '的文件夹')
-            os.makedirs(path)
-            print('创建成功！')
-        else:
-            print(path, '文件夹已经存在了，不再创建')
 
-    def request(self, url):  # 返回网页的response
-        r = requests.get(url, headers=self.headers)
-        return r
+output_dic = {}
+f = open("company.txt", "r")
+lines = f.readlines()
+for line in lines:
+    line = line.replace("\n", "")
+    # line = line.replace("(", "")
+    # line = line.replace(")", "")
+    line = line.strip()
+    output_dic[line] = "not get"
+f.close()
 
-# 主程序开始
-l = LoginModule()
-l.login()
+print(output_dic)
+for key in output_dic:
+    try:
+        output_dic[key] =  get_result(line)
+    except:
+        print(line)
 
+print(output_dic)
+cid_file = open('cid.txt','w+')
+for key in output_dic:
+    cid_file.write(key)
+    cid_file.write('\t')
+    cid_file.write(output_dic[key])
+    cid_file.write('\n')
+cid_file.close()
