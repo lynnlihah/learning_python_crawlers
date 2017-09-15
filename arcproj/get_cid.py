@@ -46,7 +46,7 @@ f.close()
 print(output_dic)
 for key in output_dic:
     try:
-        output_dic[key] =  get_result(line)
+        output_dic[key] =  get_result(key)
     except:
         print(line)
 
