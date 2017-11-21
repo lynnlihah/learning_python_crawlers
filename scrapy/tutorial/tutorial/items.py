@@ -12,6 +12,7 @@ class DmozItem(scrapy.Item):
 	link = scrapy.Field() # URL
 	desc = scrapy.Field() # description
 
+
 class TutorialItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
